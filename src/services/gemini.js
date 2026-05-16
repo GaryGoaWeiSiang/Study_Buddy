@@ -4,8 +4,8 @@ export const generateFlashcards = async ({ text, fileData }) => {
     throw new Error("API key is not configured. Please set VITE_GEMINI_API_KEY in .env");
   }
 
-  // Using the requested model: Gemini 3 Flash (using the preview endpoint)
-  const model = "gemini-1.5-flash"; // Falling back to 1.5-flash as 3.0/3-flash might be preview-only or named differently in regional endpoints
+  // Using the requested model: Gemini 3 Flash Preview
+  const model = "gemini-3-flash-preview"; 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const prompt = `
