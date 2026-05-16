@@ -1,11 +1,47 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Flashcard from '../components/Flashcard';
 import { supabase } from '../services/supabase';
 
-export default function StudySessionView({ decks, setDecks }) {
+export default function StudySessionView({ decks, setDecks, setHistory, setStats }) {
   const { deckId } = useParams();
   
+  const activeDeckIndex = decks.findIndex(d => d.id === deckId);
+  const activeDeck = decks[activeDeckIndex];
+
+  useEffect(() => {
+    if (activeDeck) {
+      updateLastAccessed(activeDeck.title);
+    }
+  }, [deckId, activeDeck?.title]);
+
+  const updateLastAccessed = async (title) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from('user_stats').upsert({ 
+        user_id: user.id, 
+        last_deck_title: title,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      setStats(prev => ({ ...prev, last_deck_title: title }));
+    } catch (err) {
+      console.error("Error updating last accessed:", err);
+    }
+  };
+
+  const markAsCompleted = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from('completion_history').insert({
+        user_id: user.id,
+        deck_title: activeDeck.title
+      }).select().single();
+      if (!error && data) setHistory(prev => [data, ...prev]);
+    } catch (err) {
+      console.error("Error marking as completed:", err);
+    }
+  };
+
   if (!deckId) {
     return (
       <div className="max-w-3xl w-full flex flex-col items-center justify-center h-full opacity-50 min-h-[500px]">
@@ -14,9 +50,6 @@ export default function StudySessionView({ decks, setDecks }) {
       </div>
     );
   }
-
-  const activeDeckIndex = decks.findIndex(d => d.id === deckId);
-  const activeDeck = decks[activeDeckIndex];
 
   if (!activeDeck) {
     return (
@@ -31,6 +64,11 @@ export default function StudySessionView({ decks, setDecks }) {
     if (activeDeck.current_index >= activeDeck.cards.length - 1) return;
     
     const nextIndex = activeDeck.current_index + 1;
+
+    // If reaching the last card for the first time, record as completed
+    if (nextIndex === activeDeck.cards.length - 1) {
+      markAsCompleted();
+    }
     
     setDecks(prevDecks => {
       const newDecks = [...prevDecks];

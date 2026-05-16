@@ -11,6 +11,8 @@ import LoginView from './pages/LoginView';
 function App() {
   const [session, setSession] = useState(null);
   const [decks, setDecks] = useState([]);
+  const [stats, setStats] = useState({ total_quizzes_taken: 0, total_correct_answers: 0, last_deck_title: 'None' });
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,23 +32,39 @@ function App() {
 
   useEffect(() => {
     if (session?.user) {
-      fetchDecks();
+      fetchInitialData();
     } else {
       setDecks([]);
+      setStats({ total_quizzes_taken: 0, total_correct_answers: 0, last_deck_title: 'None' });
+      setHistory([]);
     }
   }, [session]);
 
-  const fetchDecks = async () => {
+  const fetchInitialData = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch Decks
+      const { data: deckData, error: deckError } = await supabase
         .from('decks')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setDecks(data || []);
+      if (deckError) throw deckError;
+      setDecks(deckData || []);
+
+      // Fetch Stats
+      const { data: statsData, error: statsError } = await supabase
+        .from('user_stats')
+        .select('*')
+        .single();
+      if (!statsError && statsData) setStats(statsData);
+
+      // Fetch History
+      const { data: historyData, error: historyError } = await supabase
+        .from('completion_history')
+        .select('*')
+        .order('completed_at', { ascending: false });
+      if (!historyError && historyData) setHistory(historyData);
     } catch (error) {
-      console.error('Error fetching decks:', error.message);
+      console.error('Error fetching initial data:', error.message);
     }
   };
 
@@ -65,10 +83,10 @@ function App() {
         
         <main className="flex-1 p-8 md:p-12 overflow-y-auto">
           <Routes>
-            <Route path="/" element={<DashboardView decks={decks} setDecks={setDecks} />} />
-            <Route path="/create" element={<CreateDeckView setDecks={setDecks} userId={session.user.id} />} />
-            <Route path="/study/:deckId?" element={<StudySessionView decks={decks} setDecks={setDecks} />} />
-            <Route path="/quiz/:deckId" element={<QuizView decks={decks} setDecks={setDecks} />} />
+            <Route path="/" element={<DashboardView decks={decks} setDecks={setDecks} stats={stats} history={history} />} />
+            <Route path="/create" element={<CreateDeckView setDecks={setDecks} userId={session.user.id} setStats={setStats} />} />
+            <Route path="/study/:deckId?" element={<StudySessionView decks={decks} setDecks={setDecks} setHistory={setHistory} setStats={setStats} />} />
+            <Route path="/quiz/:deckId" element={<QuizView decks={decks} setDecks={setDecks} setStats={setStats} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

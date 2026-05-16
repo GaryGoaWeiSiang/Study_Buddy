@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { CheckCircle2, XCircle, ChevronRight, Award, RotateCcw } from 'lucide-react';
 
-export default function QuizView({ decks, setDecks }) {
+export default function QuizView({ decks, setDecks, setStats }) {
   const { deckId } = useParams();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -40,8 +40,33 @@ export default function QuizView({ decks, setDecks }) {
       setIsAnswered(false);
     } else {
       setShowResults(true);
-      // Sync high score to Supabase
-      if (!activeDeck.high_score || score > activeDeck.high_score) {
+      
+      // Update Persistent Stats
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        // Fetch current stats to increment correctly
+        const { data: currentStats } = await supabase.from('user_stats').select('*').eq('user_id', user.id).single();
+        
+        const updatedTaken = (currentStats?.total_quizzes_taken || 0) + 1;
+        const updatedCorrect = (currentStats?.total_correct_answers || 0) + score;
+
+        await supabase.from('user_stats').upsert({
+          user_id: user.id,
+          total_quizzes_taken: updatedTaken,
+          total_correct_answers: updatedCorrect,
+          updated_at: new Date().toISOString()
+        });
+
+        setStats(prev => ({
+          ...prev,
+          total_quizzes_taken: updatedTaken,
+          total_correct_answers: updatedCorrect
+        }));
+      } catch (err) {
+        console.error("Error updating quiz stats:", err);
+      }
+
+      // Sync high score to Supabase...
         try {
           await supabase.from('decks').update({ high_score: score }).eq('id', deckId);
           setDecks(prev => prev.map(d => d.id === deckId ? { ...d, high_score: score } : d));
