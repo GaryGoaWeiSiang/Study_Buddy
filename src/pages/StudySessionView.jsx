@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { RotateCcw } from 'lucide-react';
 import Flashcard from '../components/Flashcard';
 import { supabase } from '../services/supabase';
 
@@ -105,14 +106,41 @@ export default function StudySessionView({ decks, setDecks, setHistory, setStats
     }
   };
 
+  const handleReset = async () => {
+    if (!window.confirm('Reset progress to the beginning of this deck?')) return;
+    
+    setDecks(prevDecks => {
+      const newDecks = [...prevDecks];
+      const targetDeck = { ...newDecks[activeDeckIndex] };
+      targetDeck.current_index = 0;
+      newDecks[activeDeckIndex] = targetDeck;
+      return newDecks;
+    });
+
+    try {
+      await supabase.from('decks').update({ current_index: 0 }).eq('id', deckId);
+    } catch (err) {
+      console.error("Failed to reset progress:", err);
+    }
+  };
+
   const progressPercentage = ((activeDeck.current_index + 1) / activeDeck.cards.length) * 100;
 
   return (
     <div className="max-w-4xl w-full flex flex-col gap-6 h-full relative">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-semibold tracking-tight">{activeDeck.title}</h2>
-          <p className="opacity-70 text-sm mt-1">Study Session</p>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-semibold tracking-tight">{activeDeck.title}</h2>
+            <button 
+              onClick={handleReset}
+              className="p-1.5 opacity-40 hover:opacity-100 hover:bg-black/5 rounded-full transition-all"
+              title="Reset Session"
+            >
+              <RotateCcw size={16} />
+            </button>
+          </div>
+          <p className="opacity-70 text-sm">Study Session</p>
         </div>
         <div className="w-1/3 flex flex-col items-end gap-2">
           <span className="text-xs font-semibold tracking-wider opacity-60 uppercase">{activeDeck.current_index + 1} / {activeDeck.cards.length}</span>
