@@ -47,7 +47,7 @@ export default function DashboardView({ decks, setDecks }) {
                 
                 <div className="w-full flex flex-col gap-2 mt-auto">
                   <div className="flex justify-between text-xs opacity-80 font-semibold">
-                    <span>{deck.current_index} Completed</span>
+                    <span>{deck.current_index + 1} Completed</span>
                     <span>{Math.round(progressPercentage)}%</span>
                   </div>
                   <div className="w-full h-2 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
