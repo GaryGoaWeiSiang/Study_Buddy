@@ -74,7 +74,6 @@ export default function QuizView({ decks, setDecks, setStats }) {
           console.error("Failed to sync high score:", err);
         }
       }
-    }
   };
 
   const resetQuiz = () => {
