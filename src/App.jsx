@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import DashboardView from './pages/DashboardView';
 import CreateDeckView from './pages/CreateDeckView';
 import StudySessionView from './pages/StudySessionView';
+import QuizView from './pages/QuizView';
 import LoginView from './pages/LoginView';
 
 function App() {
@@ -67,6 +68,7 @@ function App() {
             <Route path="/" element={<DashboardView decks={decks} setDecks={setDecks} />} />
             <Route path="/create" element={<CreateDeckView setDecks={setDecks} userId={session.user.id} />} />
             <Route path="/study/:deckId?" element={<StudySessionView decks={decks} setDecks={setDecks} />} />
+            <Route path="/quiz/:deckId" element={<QuizView decks={decks} setDecks={setDecks} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

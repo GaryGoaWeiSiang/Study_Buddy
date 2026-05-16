@@ -35,7 +35,14 @@ export default function DashboardView({ decks, setDecks }) {
               <div key={deck.id} className="bento-card flex flex-col gap-5 hover:shadow-md transition-shadow">
                 <div>
                   <h3 className="text-xl font-semibold tracking-tight line-clamp-1" title={deck.title}>{deck.title}</h3>
-                  <p className="opacity-60 text-xs uppercase tracking-widest mt-1 font-semibold">{deck.cards.length} Cards</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="opacity-60 text-xs uppercase tracking-widest font-semibold">{deck.cards.length} Cards</p>
+                    {deck.high_score !== undefined && deck.high_score !== null && (
+                      <div className="text-[var(--color-primary)] text-xs font-bold flex items-center gap-1 bg-[#fff5f5] px-2 py-0.5 rounded-full border border-[#ffebeb]">
+                        ★ {deck.high_score} / {deck.quiz?.length || 0}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="w-full flex flex-col gap-2 mt-auto">
@@ -51,18 +58,26 @@ export default function DashboardView({ decks, setDecks }) {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-2">
-                  <Link 
-                    to={`/study/${deck.id}`}
-                    className="flex-1 text-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-md font-medium text-sm hover:opacity-90 transition-colors"
-                  >
-                    Study
-                  </Link>
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex gap-2">
+                    <Link 
+                      to={`/study/${deck.id}`}
+                      className="flex-1 text-center px-4 py-2 bg-[var(--color-primary)] text-white rounded-md font-medium text-sm hover:opacity-90 transition-colors"
+                    >
+                      Study
+                    </Link>
+                    <Link 
+                      to={`/quiz/${deck.id}`}
+                      className="flex-1 text-center px-4 py-2 border-2 border-[var(--color-border-subtle)] text-[var(--color-text-main)] rounded-md font-medium text-sm hover:bg-[var(--color-border-subtle)] transition-colors"
+                    >
+                      Quiz
+                    </Link>
+                  </div>
                   <button 
                     onClick={() => handleDelete(deck.id)}
-                    className="px-4 py-2 border border-[#ba1a1a] text-[#ba1a1a] rounded-md font-medium text-sm hover:bg-[#ffdad6] transition-colors"
+                    className="w-full px-4 py-1.5 text-[#ba1a1a] opacity-60 rounded-md font-medium text-xs hover:opacity-100 hover:bg-[#ffdad6] transition-colors"
                   >
-                    Delete
+                    Delete Deck
                   </button>
                 </div>
               </div>

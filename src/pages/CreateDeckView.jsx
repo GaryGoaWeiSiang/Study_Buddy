@@ -19,6 +19,7 @@ export default function CreateDeckView({ setDecks, userId }) {
         user_id: userId,
         title: customTitle && customTitle.trim() !== '' ? customTitle : result.title,
         cards: result.cards,
+        quiz: result.quiz,
         current_index: 0
       };
 

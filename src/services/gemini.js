@@ -12,14 +12,29 @@ export const generateFlashcards = async (text) => {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const prompt = `
-You are a tutor. Create a 10-card study deck based on the following lecture text.
+You are a tutor. Create a study package based on the following lecture text.
 Return the result strictly as a JSON object with the following structure:
 {
-  "title": "A short, descriptive title for this deck (3-5 words)",
+  "title": "A short, descriptive title (3-5 words)",
   "cards": [
     { "front": "question or concept", "back": "answer or definition" }
+  ],
+  "quiz": [
+    {
+      "type": "multiple-choice", 
+      "question": "question text",
+      "options": ["choice 1", "choice 2", "choice 3", "choice 4"],
+      "correctAnswer": 0
+    },
+    {
+      "type": "true-false",
+      "question": "statement",
+      "options": ["True", "False"],
+      "correctAnswer": 0
+    }
   ]
 }
+Include exactly 10 flashcards and 5-8 quiz questions (a mix of multiple-choice and true-false).
 Do not include any other text, markdown formatting, or explanations. Only the raw JSON object.
 
 Lecture text:
@@ -69,6 +84,9 @@ ${text}
       const parsedData = JSON.parse(contentText);
       if (!parsedData.cards || !Array.isArray(parsedData.cards)) {
         throw new Error("AI response did not contain a valid cards array.");
+      }
+      if (!parsedData.quiz || !Array.isArray(parsedData.quiz)) {
+        throw new Error("AI response did not contain a valid quiz array.");
       }
       return parsedData;
     } catch (parseError) {
