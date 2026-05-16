@@ -9,15 +9,15 @@ export default function CreateDeckView({ setDecks, userId }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleGenerate = async ({ text, customTitle }) => {
+  const handleGenerate = async ({ text, title, fileData }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await generateFlashcards(text);
+      const result = await generateFlashcards({ text, fileData });
       
       const newDeck = {
         user_id: userId,
-        title: customTitle && customTitle.trim() !== '' ? customTitle : result.title,
+        title: title && title.trim() !== '' ? title : result.title,
         cards: result.cards,
         quiz: result.quiz,
         current_index: 0
@@ -37,8 +37,8 @@ export default function CreateDeckView({ setDecks, userId }) {
 
   return (
     <div className="max-w-3xl w-full flex flex-col gap-6">
-      <h2 className="text-3xl font-semibold tracking-tight">Create Deck</h2>
-      <p className="opacity-70">Paste your text to generate an AI study deck.</p>
+      <h2 className="text-3xl font-bold tracking-tight">Generate Study Package</h2>
+      <p className="opacity-70 text-lg">Input your lecture notes, PDFs, or images of handwritten notes to generate your AI deck.</p>
       
       <div className="bento-card mt-4">
         {error && (

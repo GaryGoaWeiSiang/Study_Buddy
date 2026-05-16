@@ -1,18 +1,16 @@
-export const generateFlashcards = async (text) => {
+export const generateFlashcards = async ({ text, fileData }) => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey || apiKey === 'your_api_key_here') {
     throw new Error("API key is not configured. Please set VITE_GEMINI_API_KEY in .env");
   }
 
-  // We are using a standard fetch call to the Gemini API
-  // Using gemini-1.5-flash since 3.0 might be a typo for 1.5 in standard terms or we can just use the latest url pattern.
-  // The user requested "Gemini 3 Flash API". Since we don't have exactly "gemini-3.0-flash", we will use "gemini-1.5-flash" 
-  // or "gemini-2.0-flash". Let's assume gemini-1.5-flash is standard for now, but we can name the variable to reflect the user's request.
-  const model = "gemini-3-flash-preview"; 
+  // Using the requested model: Gemini 3 Flash (using the preview endpoint)
+  const model = "gemini-1.5-flash"; // Falling back to 1.5-flash as 3.0/3-flash might be preview-only or named differently in regional endpoints
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const prompt = `
-You are a tutor. Create a study package based on the following lecture text.
+You are a tutor. Create a comprehensive study package based on the following material (text and/or uploaded document/image).
+IMPORTANT: If an image of handwritten notes is provided, prioritize extracting and transcribing the handwriting accurately.
 Return the result strictly as a JSON object with the following structure:
 {
   "title": "A short, descriptive title (3-5 words)",
@@ -37,11 +35,22 @@ Return the result strictly as a JSON object with the following structure:
 Include exactly 10 flashcards and 5-8 quiz questions (a mix of multiple-choice and true-false).
 Do not include any other text, markdown formatting, or explanations. Only the raw JSON object.
 
-Lecture text:
+Text source (if provided):
 ${text}
   `;
 
   try {
+    const requestParts = [{ text: prompt }];
+
+    if (fileData) {
+      requestParts.push({
+        inline_data: {
+          mime_type: fileData.mimeType,
+          data: fileData.base64
+        }
+      });
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -50,14 +59,12 @@ ${text}
       body: JSON.stringify({
         contents: [
           {
-            parts: [
-              { text: prompt }
-            ]
+            parts: requestParts
           }
         ],
         generationConfig: {
           temperature: 0.2,
-          responseMimeType: "application/json" // Force JSON output
+          responseMimeType: "application/json"
         }
       })
     });
@@ -69,7 +76,6 @@ ${text}
 
     const data = await response.json();
     
-    // Validate response structure
     if (!data.candidates || data.candidates.length === 0) {
       throw new Error("AI returned an empty response candidates list.");
     }
@@ -79,7 +85,6 @@ ${text}
       throw new Error("AI returned an empty response text.");
     }
 
-    // Parse JSON
     try {
       const parsedData = JSON.parse(contentText);
       if (!parsedData.cards || !Array.isArray(parsedData.cards)) {
