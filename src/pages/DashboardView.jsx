@@ -60,7 +60,7 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
           </div>
         </div>
 
-        <div className="bento-card p-6 border-2 border-[var(--color-border-subtle)] flex flex-col justify-between min-h-[160px]">
+        <div className="bento-card p-6 bg-white border-2 border-[var(--color-border-subtle)] flex flex-col justify-between min-h-[160px]">
           <div className="flex justify-between items-start text-[var(--color-primary)]">
             <div className="p-2 bg-[#fff5f5] rounded-lg"><Trophy size={24} /></div>
             <span className="text-3xl font-black">{accuracy}%</span>
@@ -71,7 +71,7 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
           </div>
         </div>
 
-        <div className="bento-card p-6 border-2 border-[var(--color-border-subtle)] flex flex-col justify-between min-h-[160px]">
+        <div className="bento-card p-6 bg-white border-2 border-[var(--color-border-subtle)] flex flex-col justify-between min-h-[160px]">
           <div className="flex justify-between items-start text-[var(--color-text-main)]">
             <div className="p-2 bg-gray-100 rounded-lg"><Clock size={24} /></div>
           </div>
@@ -92,7 +92,7 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
         </div>
 
         {decks.length === 0 ? (
-          <div className="bento-card py-20 text-center border-2 border-dashed border-[var(--color-border-subtle)]">
+          <div className="bento-card py-20 bg-white text-center border-2 border-dashed border-[var(--color-border-subtle)]">
             <p className="opacity-50 text-lg italic">No active decks. Create one to start studying!</p>
             <Link to="/create" className="mt-4 inline-block px-8 py-3 bg-[var(--color-primary)] text-white rounded-md font-bold hover:opacity-90">Create Your First Deck</Link>
           </div>
@@ -102,7 +102,7 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
               const progressPercentage = deck.cards.length > 0 ? ((deck.current_index + 1) / deck.cards.length) * 100 : 0;
               
               return (
-                <div key={deck.id} className="bento-card flex flex-col gap-5 hover:shadow-md transition-shadow">
+                <div key={deck.id} className="bento-card bg-white flex flex-col gap-5 hover:shadow-md transition-shadow">
                   <div>
                     <h3 className="text-xl font-semibold tracking-tight line-clamp-1" title={deck.title}>{deck.title}</h3>
                     <div className="flex justify-between items-center mt-1">
