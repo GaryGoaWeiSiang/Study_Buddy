@@ -28,7 +28,9 @@ export default function StudySessionView({ decks, setDecks }) {
   }
 
   const handleNext = async () => {
-    const nextIndex = (activeDeck.current_index + 1) % activeDeck.cards.length;
+    if (activeDeck.current_index >= activeDeck.cards.length - 1) return;
+    
+    const nextIndex = activeDeck.current_index + 1;
     
     setDecks(prevDecks => {
       const newDecks = [...prevDecks];

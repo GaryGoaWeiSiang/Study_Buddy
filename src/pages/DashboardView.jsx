@@ -29,7 +29,7 @@ export default function DashboardView({ decks, setDecks }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {decks.map(deck => {
-            const progressPercentage = deck.cards.length > 0 ? (deck.current_index / deck.cards.length) * 100 : 0;
+            const progressPercentage = deck.cards.length > 0 ? ((deck.current_index + 1) / deck.cards.length) * 100 : 0;
             
             return (
               <div key={deck.id} className="bento-card flex flex-col gap-5 hover:shadow-md transition-shadow">

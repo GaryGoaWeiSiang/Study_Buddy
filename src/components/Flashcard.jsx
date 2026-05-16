@@ -35,12 +35,18 @@ export default function Flashcard({ card, index, total, onNext }) {
       
       {/* Controls */}
       <div className="flex justify-end w-full mt-2">
-         <button 
-           className="px-6 py-2 border border-[var(--color-border-subtle)] rounded-md hover:bg-black/5 transition-colors font-medium text-sm"
-           onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
-         >
-           Next Card →
-         </button>
+         {index < total - 1 ? (
+           <button 
+             className="px-6 py-2 border border-[var(--color-border-subtle)] rounded-md hover:bg-black/5 transition-colors font-medium text-sm"
+             onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
+           >
+             Next Card →
+           </button>
+         ) : (
+           <span className="px-6 py-2 text-[var(--color-primary)] font-bold text-sm tracking-widest uppercase">
+             Session Complete
+           </span>
+         )}
       </div>
     </div>
   );
