@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Flashcard({ card, index, total, onNext }) {
+export default function Flashcard({ card, index, total, onNext, onPrev }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   // Reset flip state when card changes
@@ -34,7 +34,15 @@ export default function Flashcard({ card, index, total, onNext }) {
       </div>
       
       {/* Controls */}
-      <div className="flex justify-end w-full mt-2">
+      <div className="flex justify-between w-full mt-2">
+         <button 
+           disabled={index === 0}
+           className={`px-6 py-2 border border-[var(--color-border-subtle)] rounded-md transition-colors font-medium text-sm ${index === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-black/5'}`}
+           onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
+         >
+           ← Previous
+         </button>
+
          {index < total - 1 ? (
            <button 
              className="px-6 py-2 border border-[var(--color-border-subtle)] rounded-md hover:bg-black/5 transition-colors font-medium text-sm"
@@ -43,7 +51,7 @@ export default function Flashcard({ card, index, total, onNext }) {
              Next Card →
            </button>
          ) : (
-           <span className="px-6 py-2 text-[var(--color-primary)] font-bold text-sm tracking-widest uppercase">
+           <span className="px-6 py-2 text-[var(--color-primary)] font-bold text-sm tracking-widest uppercase flex items-center">
              Session Complete
            </span>
          )}

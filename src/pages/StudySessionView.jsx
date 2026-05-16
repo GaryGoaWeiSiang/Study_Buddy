@@ -47,6 +47,26 @@ export default function StudySessionView({ decks, setDecks }) {
     }
   };
 
+  const handlePrev = async () => {
+    if (activeDeck.current_index <= 0) return;
+    
+    const prevIndex = activeDeck.current_index - 1;
+    
+    setDecks(prevDecks => {
+      const newDecks = [...prevDecks];
+      const targetDeck = { ...newDecks[activeDeckIndex] };
+      targetDeck.current_index = prevIndex;
+      newDecks[activeDeckIndex] = targetDeck;
+      return newDecks;
+    });
+
+    try {
+      await supabase.from('decks').update({ current_index: prevIndex }).eq('id', deckId);
+    } catch (err) {
+      console.error("Failed to sync progress:", err);
+    }
+  };
+
   const progressPercentage = ((activeDeck.current_index + 1) / activeDeck.cards.length) * 100;
 
   return (
@@ -75,6 +95,7 @@ export default function StudySessionView({ decks, setDecks }) {
             index={activeDeck.current_index} 
             total={activeDeck.cards.length} 
             onNext={handleNext}
+            onPrev={handlePrev}
           />
         </div>
       </div>
