@@ -32,7 +32,7 @@ Return the result strictly as a JSON object with the following structure:
     }
   ]
 }
-Include exactly 10 flashcards and 5-8 quiz questions (a mix of multiple-choice and true-false).
+Include exactly 10 flashcards and exactly 15 quiz questions (a mix of multiple-choice and true-false).
 Do not include any other text, markdown formatting, or explanations. Only the raw JSON object.
 
 Text source (if provided):

@@ -34,9 +34,9 @@ export default function QuizView({ decks, setDecks, setStats }) {
   const getLimitOptions = () => {
     const total = activeDeck.quiz.length;
     const options = [];
-    if (total > 3) options.push(3);
     if (total > 5) options.push(5);
     if (total > 10) options.push(10);
+    if (total > 15) options.push(15);
     if (!options.includes(total)) options.push(total);
     return options.sort((a, b) => a - b);
   };
