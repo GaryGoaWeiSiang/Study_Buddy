@@ -22,13 +22,15 @@ Return the result strictly as a JSON object with the following structure:
       "type": "multiple-choice", 
       "question": "question text",
       "options": ["choice 1", "choice 2", "choice 3", "choice 4"],
-      "correctAnswer": 0
+      "correctAnswer": 0,
+      "explanation": "A clear, helpful explanation of why the correct option is correct."
     },
     {
       "type": "true-false",
       "question": "statement",
       "options": ["True", "False"],
-      "correctAnswer": 0
+      "correctAnswer": 0,
+      "explanation": "A clear, helpful explanation of why the statement is true or false."
     }
   ]
 }

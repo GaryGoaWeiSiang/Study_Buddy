@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { CheckCircle2, XCircle, ChevronRight, Award, RotateCcw, HelpCircle, Play } from 'lucide-react';
+import { CheckCircle2, XCircle, ChevronRight, Award, RotateCcw, HelpCircle, Play, Lightbulb } from 'lucide-react';
 
 export default function QuizView({ decks, setDecks, setStats }) {
   const { deckId } = useParams();
@@ -279,13 +279,27 @@ export default function QuizView({ decks, setDecks, setStats }) {
         </div>
 
         {isAnswered && (
-          <button 
-            onClick={handleNext}
-            className="mt-4 py-4 bg-[var(--color-text-main)] text-white rounded-md font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group"
-          >
-            {currentQuestionIndex < quizQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
-            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-          </button>
+          <div className="flex flex-col gap-4 mt-2 animate-fadeIn">
+            <div className="p-5 rounded-xl bg-amber-50/50 border border-amber-200/60 flex gap-3 text-amber-950">
+              <div className="p-2 bg-amber-100/80 rounded-lg text-amber-700 h-fit flex items-center justify-center">
+                <Lightbulb size={20} />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-amber-800">Explanation</p>
+                <p className="text-sm mt-1 leading-relaxed font-medium">
+                  {currentQuestion.explanation || "This is the correct answer based on the study material."}
+                </p>
+              </div>
+            </div>
+            
+            <button 
+              onClick={handleNext}
+              className="py-4 bg-[var(--color-text-main)] text-white rounded-md font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group"
+            >
+              {currentQuestionIndex < quizQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
+              <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         )}
       </div>
     </div>
