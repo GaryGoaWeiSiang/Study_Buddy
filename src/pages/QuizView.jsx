@@ -80,18 +80,21 @@ export default function QuizView({ decks, setDecks, setStats }) {
         
         const updatedTaken = (currentStats?.total_quizzes_taken || 0) + 1;
         const updatedCorrect = (currentStats?.total_correct_answers || 0) + score;
+        const updatedAttempted = (currentStats?.total_questions_attempted || 0) + quizQuestions.length;
 
         await supabase.from('user_stats').upsert({
           user_id: user.id,
           total_quizzes_taken: updatedTaken,
           total_correct_answers: updatedCorrect,
+          total_questions_attempted: updatedAttempted,
           updated_at: new Date().toISOString()
         });
 
         setStats(prev => ({
           ...prev,
           total_quizzes_taken: updatedTaken,
-          total_correct_answers: updatedCorrect
+          total_correct_answers: updatedCorrect,
+          total_questions_attempted: updatedAttempted
         }));
       } catch (err) {
         console.error("Error updating quiz stats:", err);

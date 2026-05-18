@@ -11,7 +11,7 @@ import LoginView from './pages/LoginView';
 function App() {
   const [session, setSession] = useState(null);
   const [decks, setDecks] = useState([]);
-  const [stats, setStats] = useState({ total_quizzes_taken: 0, total_correct_answers: 0, last_deck_title: 'None' });
+  const [stats, setStats] = useState({ total_quizzes_taken: 0, total_correct_answers: 0, total_questions_attempted: 0, last_deck_title: 'None' });
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 

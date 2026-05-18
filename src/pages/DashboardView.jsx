@@ -17,9 +17,11 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
     }
   };
 
-  const accuracy = stats.total_quizzes_taken > 0 
-    ? Math.round((stats.total_correct_answers / (stats.total_quizzes_taken * 7)) * 100) // Assuming avg 7 questions per quiz
-    : 0;
+  const accuracy = stats.total_questions_attempted > 0 
+    ? Math.round((stats.total_correct_answers / stats.total_questions_attempted) * 100)
+    : stats.total_quizzes_taken > 0 
+      ? Math.min(100, Math.round((stats.total_correct_answers / (stats.total_quizzes_taken * 10)) * 100))
+      : 0;
 
   return (
     <div className="max-w-6xl w-full mx-auto flex flex-col gap-10">
