@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { CheckCircle2, XCircle, ChevronRight, Award, RotateCcw } from 'lucide-react';
+import { CheckCircle2, XCircle, ChevronRight, Award, RotateCcw, HelpCircle, Play } from 'lucide-react';
 
 export default function QuizView({ decks, setDecks, setStats }) {
   const { deckId } = useParams();
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [selectedLimit, setSelectedLimit] = useState(5);
+  const [quizQuestions, setQuizQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -12,6 +15,12 @@ export default function QuizView({ decks, setDecks, setStats }) {
   const [showResults, setShowResults] = useState(false);
 
   const activeDeck = decks.find(d => d.id === deckId);
+
+  useEffect(() => {
+    if (activeDeck && activeDeck.quiz) {
+      setSelectedLimit(activeDeck.quiz.length);
+    }
+  }, [activeDeck]);
 
   if (!activeDeck || !activeDeck.quiz) {
     return (
@@ -22,7 +31,29 @@ export default function QuizView({ decks, setDecks, setStats }) {
     );
   }
 
-  const currentQuestion = activeDeck.quiz[currentQuestionIndex];
+  const getLimitOptions = () => {
+    const total = activeDeck.quiz.length;
+    const options = [];
+    if (total > 3) options.push(3);
+    if (total > 5) options.push(5);
+    if (total > 10) options.push(10);
+    if (!options.includes(total)) options.push(total);
+    return options.sort((a, b) => a - b);
+  };
+
+  const startQuiz = () => {
+    // Shuffle and slice questions for variety, or just slice directly. Let's slice!
+    const slicedQuestions = activeDeck.quiz.slice(0, selectedLimit);
+    setQuizQuestions(slicedQuestions);
+    setQuizStarted(true);
+    setCurrentQuestionIndex(0);
+    setSelectedOption(null);
+    setIsAnswered(false);
+    setScore(0);
+    setShowResults(false);
+  };
+
+  const currentQuestion = quizQuestions[currentQuestionIndex];
 
   const handleOptionClick = (index) => {
     if (isAnswered) return;
@@ -34,7 +65,7 @@ export default function QuizView({ decks, setDecks, setStats }) {
   };
 
   const handleNext = async () => {
-    if (currentQuestionIndex < activeDeck.quiz.length - 1) {
+    if (currentQuestionIndex < quizQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedOption(null);
       setIsAnswered(false);
@@ -66,7 +97,8 @@ export default function QuizView({ decks, setDecks, setStats }) {
         console.error("Error updating quiz stats:", err);
       }
 
-      // Sync high score to Supabase...
+      // Sync high score to Supabase
+      if (!activeDeck.high_score || score > activeDeck.high_score) {
         try {
           await supabase.from('decks').update({ high_score: score }).eq('id', deckId);
           setDecks(prev => prev.map(d => d.id === deckId ? { ...d, high_score: score } : d));
@@ -74,9 +106,11 @@ export default function QuizView({ decks, setDecks, setStats }) {
           console.error("Failed to sync high score:", err);
         }
       }
+    }
   };
 
   const resetQuiz = () => {
+    setQuizStarted(false);
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
     setIsAnswered(false);
@@ -84,10 +118,69 @@ export default function QuizView({ decks, setDecks, setStats }) {
     setShowResults(false);
   };
 
+  // Setup / Configuration Screen
+  if (!quizStarted) {
+    const options = getLimitOptions();
+    return (
+      <div className="max-w-2xl w-full mx-auto flex flex-col justify-center py-12 gap-8">
+        <div className="bento-card bg-white p-12 w-full flex flex-col gap-8 shadow-xl border border-[var(--color-border-subtle)]">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-[#fff5f5] flex items-center justify-center text-[var(--color-primary)] shadow-sm">
+              <HelpCircle size={32} />
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-widest font-bold text-[var(--color-primary)]">Quiz Preparation</span>
+              <h2 className="text-3xl font-bold tracking-tight mt-1">{activeDeck.title}</h2>
+              <p className="opacity-60 mt-2 text-sm">Configure your quiz length before starting the session.</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <label className="text-xs font-bold tracking-widest uppercase text-[var(--color-text-main)] opacity-60 text-center">
+              Select Number of Questions
+            </label>
+            <div className="flex justify-center gap-3 mt-2">
+              {options.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setSelectedLimit(option)}
+                  className={`px-6 py-3 rounded-xl border-2 font-bold text-sm transition-all ${
+                    selectedLimit === option
+                      ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-md'
+                      : 'border-[var(--color-border-subtle)] text-[var(--color-text-main)] hover:border-[var(--color-primary)] bg-white'
+                  }`}
+                >
+                  {option === activeDeck.quiz.length ? `All (${option})` : `${option} Qs`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              onClick={startQuiz}
+              className="w-full py-4 bg-[var(--color-text-main)] text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:translate-y-[-2px] transition-all"
+            >
+              <Play size={20} />
+              Start Quiz
+            </button>
+            <Link
+              to="/"
+              className="w-full py-4 text-center border-2 border-[var(--color-border-subtle)] rounded-xl font-bold text-lg hover:bg-[var(--color-border-subtle)] transition-all"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Results Screen
   if (showResults) {
     return (
       <div className="max-w-2xl w-full mx-auto flex flex-col items-center justify-center py-12 gap-8 text-center">
-        <div className="bento-card p-12 w-full flex flex-col items-center gap-6 shadow-xl">
+        <div className="bento-card p-12 bg-white w-full flex flex-col items-center gap-6 shadow-xl border border-[var(--color-border-subtle)]">
           <div className="w-24 h-24 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white shadow-lg">
             <Award size={48} />
           </div>
@@ -98,11 +191,11 @@ export default function QuizView({ decks, setDecks, setStats }) {
           
           <div className="flex gap-12 my-4">
             <div className="flex flex-col">
-              <span className="text-4xl font-black text-[var(--color-primary)]">{score} / {activeDeck.quiz.length}</span>
+              <span className="text-4xl font-black text-[var(--color-primary)]">{score} / {quizQuestions.length}</span>
               <span className="text-xs uppercase tracking-widest font-bold opacity-60">Your Score</span>
             </div>
             <div className="flex flex-col border-l border-[var(--color-border-subtle)] pl-12">
-              <span className="text-4xl font-black">{Math.round((score / activeDeck.quiz.length) * 100)}%</span>
+              <span className="text-4xl font-black">{Math.round((score / quizQuestions.length) * 100)}%</span>
               <span className="text-xs uppercase tracking-widest font-bold opacity-60">Accuracy</span>
             </div>
           </div>
@@ -134,17 +227,17 @@ export default function QuizView({ decks, setDecks, setStats }) {
           <span className="text-xs uppercase tracking-widest font-bold text-[var(--color-primary)]">Quiz Mode</span>
           <h2 className="text-3xl font-bold tracking-tight">{activeDeck.title}</h2>
         </div>
-        <span className="text-sm font-bold opacity-60">Question {currentQuestionIndex + 1} of {activeDeck.quiz.length}</span>
+        <span className="text-sm font-bold opacity-60">Question {currentQuestionIndex + 1} of {quizQuestions.length}</span>
       </div>
 
       <div className="w-full h-2 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
         <div 
           className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-500"
-          style={{ width: `${((currentQuestionIndex + 1) / activeDeck.quiz.length) * 100}%` }}
+          style={{ width: `${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%` }}
         />
       </div>
 
-      <div className="bento-card p-8 md:p-10 flex flex-col gap-8 shadow-sm">
+      <div className="bento-card p-8 md:p-10 bg-white flex flex-col gap-8 shadow-sm border border-[var(--color-border-subtle)]">
         <h3 className="text-2xl font-medium leading-tight">
           {currentQuestion.question}
         </h3>
@@ -187,7 +280,7 @@ export default function QuizView({ decks, setDecks, setStats }) {
             onClick={handleNext}
             className="mt-4 py-4 bg-[var(--color-text-main)] text-white rounded-md font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group"
           >
-            {currentQuestionIndex < activeDeck.quiz.length - 1 ? 'Next Question' : 'Finish Quiz'}
+            {currentQuestionIndex < quizQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
             <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </button>
         )}
