@@ -18,7 +18,7 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
   };
 
   const accuracy = stats.total_questions_attempted > 0 
-    ? Math.round((stats.total_correct_answers / stats.total_questions_attempted) * 100)
+    ? Math.min(100, Math.round((stats.total_correct_answers / stats.total_questions_attempted) * 100))
     : stats.total_quizzes_taken > 0 
       ? Math.min(100, Math.round((stats.total_correct_answers / (stats.total_quizzes_taken * 10)) * 100))
       : 0;
