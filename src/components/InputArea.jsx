@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, File, X, Sparkles } from 'lucide-react';
+import JSZip from 'jszip';
 
 export default function InputArea({ onSubmit, isLoading }) {
   const [title, setTitle] = useState('');
@@ -14,22 +15,77 @@ export default function InputArea({ onSubmit, isLoading }) {
     }
   };
 
+  const extractPptxText = async (pptxFile) => {
+    try {
+      const zip = await JSZip.loadAsync(pptxFile);
+      const slideFiles = Object.keys(zip.files).filter(
+        path => path.startsWith('ppt/slides/slide') && path.endsWith('.xml')
+      );
+      
+      // Sort slides numerically
+      slideFiles.sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/)[0], 10);
+        const numB = parseInt(b.match(/\d+/)[0], 10);
+        return numA - numB;
+      });
+
+      const slideTexts = [];
+      const parser = new DOMParser();
+
+      for (const filePath of slideFiles) {
+        const xmlText = await zip.files[filePath].async('text');
+        const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+        const textNodes = xmlDoc.getElementsByTagName('a:t');
+        const slideText = Array.from(textNodes)
+          .map(node => node.textContent)
+          .filter(t => t.trim().length > 0)
+          .join(' ');
+        
+        slideTexts.push(slideText);
+      }
+
+      return slideTexts
+        .map((slideText, idx) => `[Slide ${idx + 1}]\n${slideText}`)
+        .join('\n\n');
+    } catch (err) {
+      console.error("Failed to parse PPTX:", err);
+      throw new Error("Could not extract text from PowerPoint file. Please ensure it is not corrupt.");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!text.trim() && !file) return;
 
     let fileData = null;
+    let finalPayloadText = text;
+
     if (file) {
-      fileData = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve({
-          base64: reader.result.split(',')[1],
-          mimeType: file.type
+      const isPptx = file.name.endsWith('.pptx') || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      
+      if (isPptx) {
+        try {
+          const extractedText = await extractPptxText(file);
+          finalPayloadText = finalPayloadText 
+            ? `${finalPayloadText}\n\n[Extracted Slide Content]\n${extractedText}`
+            : extractedText;
+        } catch (err) {
+          alert(err.message);
+          return;
+        }
+      } else {
+        // PDF or Image base64 upload
+        fileData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve({
+            base64: reader.result.split(',')[1],
+            mimeType: file.type
+          });
+          reader.readAsDataURL(file);
         });
-        reader.readAsDataURL(file);
-      });
+      }
     }
 
-    onSubmit({ text, title, fileData });
+    onSubmit({ text: finalPayloadText, title, fileData });
   };
 
   return (
@@ -78,7 +134,7 @@ export default function InputArea({ onSubmit, isLoading }) {
                 <span className="text-[10px] opacity-60 uppercase tracking-tighter">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
               </div>
             ) : (
-              <span className="text-sm opacity-50 italic">No file selected (PDF or Images)</span>
+              <span className="text-sm opacity-50 italic">No file selected (PDF, PPTX, or Images)</span>
             )}
           </div>
           
@@ -105,7 +161,7 @@ export default function InputArea({ onSubmit, isLoading }) {
             type="file" 
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="application/pdf,image/*"
+            accept="application/pdf,image/*,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
             className="hidden"
           />
         </div>
