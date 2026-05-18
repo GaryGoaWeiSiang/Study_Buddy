@@ -83,7 +83,7 @@ function App() {
         
         <main className="flex-1 p-8 md:p-12 overflow-y-auto">
           <Routes>
-            <Route path="/" element={<DashboardView decks={decks} setDecks={setDecks} stats={stats} history={history} />} />
+            <Route path="/" element={<DashboardView decks={decks} setDecks={setDecks} stats={stats} history={history} setStats={setStats} setHistory={setHistory} />} />
             <Route path="/create" element={<CreateDeckView setDecks={setDecks} userId={session.user.id} setStats={setStats} />} />
             <Route path="/study/:deckId?" element={<StudySessionView decks={decks} setDecks={setDecks} setHistory={setHistory} setStats={setStats} />} />
             <Route path="/quiz/:deckId" element={<QuizView decks={decks} setDecks={setDecks} setStats={setStats} />} />

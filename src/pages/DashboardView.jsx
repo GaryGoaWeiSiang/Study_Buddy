@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Trophy, Clock, History, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-export default function DashboardView({ decks, setDecks, stats, history }) {
+export default function DashboardView({ decks, setDecks, stats, history, setStats, setHistory }) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const handleDelete = async (id) => {
@@ -14,6 +14,33 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
       setDecks(prev => prev.filter(d => d.id !== id));
     } catch (err) {
       console.error('Error deleting deck:', err.message);
+    }
+  };
+
+  const handleResetStats = async () => {
+    if (!window.confirm('Are you sure you want to reset all your lifetime statistics? This will reset your quiz accuracy and completion history, but will NOT delete your active decks.')) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const resetPayload = {
+        user_id: user.id,
+        total_quizzes_taken: 0,
+        total_correct_answers: 0,
+        total_questions_attempted: 0,
+        last_deck_title: null,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error } = await supabase.from('user_stats').upsert(resetPayload);
+      if (error) throw error;
+      
+      const { error: historyError } = await supabase.from('completion_history').delete().eq('user_id', user.id);
+      if (historyError) throw historyError;
+
+      setStats(resetPayload);
+      setHistory([]);
+      alert('Statistics and history reset successfully!');
+    } catch (err) {
+      console.error('Failed to reset stats:', err.message);
     }
   };
 
@@ -69,7 +96,18 @@ export default function DashboardView({ decks, setDecks, stats, history }) {
           </div>
           <div>
             <p className="text-sm font-bold opacity-60 uppercase tracking-widest">Quiz Accuracy</p>
-            <p className="text-xs mt-1 opacity-40">{stats.total_quizzes_taken} Quizzes attempted</p>
+            <div className="flex justify-between items-center mt-1">
+              <p className="text-xs opacity-40">{stats.total_quizzes_taken} Quizzes attempted</p>
+              {stats.total_quizzes_taken > 0 && (
+                <button 
+                  onClick={handleResetStats}
+                  className="text-[10px] text-red-600 hover:underline font-bold transition-all"
+                  title="Reset all stats and history"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
