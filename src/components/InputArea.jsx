@@ -6,12 +6,44 @@ export default function InputArea({ onSubmit, isLoading }) {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    if (isLoading) return;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (isLoading) return;
+
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      const isAccepted = droppedFile.type === 'application/pdf' || 
+                         droppedFile.type.startsWith('image/') || 
+                         droppedFile.name.endsWith('.pptx') || 
+                         droppedFile.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      
+      if (isAccepted) {
+        setFile(droppedFile);
+      } else {
+        alert("Please drop a valid PDF, PPTX, or Image file.");
+      }
     }
   };
 
@@ -119,26 +151,40 @@ export default function InputArea({ onSubmit, isLoading }) {
         />
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 animate-fadeIn">
         <label className="text-xs font-bold tracking-widest uppercase text-[var(--color-text-main)] opacity-60">Attachments</label>
         <div 
-          className={`border-2 border-dashed rounded-xl p-4 transition-all flex items-center justify-between ${file ? 'border-[var(--color-primary)] bg-[#fff5f5]' : 'border-[var(--color-border-subtle)] hover:border-[var(--color-primary)]'}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-xl p-6 transition-all flex flex-col md:flex-row items-center justify-between gap-4 ${
+            isDragging 
+              ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 scale-[1.01]' 
+              : file 
+                ? 'border-[var(--color-primary)] bg-[#fff5f5]' 
+                : 'border-[var(--color-border-subtle)] hover:border-[var(--color-primary)] bg-white/20'
+          }`}
         >
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className={`p-2 rounded-md ${file ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 opacity-60'}`}>
-              <File size={20} />
+          <div className="flex items-center gap-3 overflow-hidden w-full md:w-auto">
+            <div className={`p-3 rounded-xl transition-all ${file ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 opacity-60 text-gray-500'}`}>
+              <File size={24} />
             </div>
             {file ? (
               <div className="flex flex-col overflow-hidden">
-                <span className="text-sm font-bold truncate">{file.name}</span>
+                <span className="text-sm font-bold truncate text-[var(--color-text-main)]">{file.name}</span>
                 <span className="text-[10px] opacity-60 uppercase tracking-tighter">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
               </div>
             ) : (
-              <span className="text-sm opacity-50 italic">No file selected (PDF, PPTX, or Images)</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-[var(--color-text-main)] opacity-70">
+                  {isDragging ? 'Drop it here!' : 'Drag & drop your file here'}
+                </span>
+                <span className="text-[10px] opacity-50 font-medium">Supports PDF, PPTX, or Images</span>
+              </div>
             )}
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
             {file && (
               <button 
                 onClick={() => setFile(null)}
@@ -150,7 +196,7 @@ export default function InputArea({ onSubmit, isLoading }) {
             )}
             <button 
               onClick={() => fileInputRef.current.click()}
-              className="px-4 py-2 bg-white border-2 border-[var(--color-border-subtle)] rounded-lg text-xs font-bold uppercase tracking-wider hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all flex items-center gap-2 shadow-sm"
+              className="px-4 py-2 bg-white border-2 border-[var(--color-border-subtle)] rounded-lg text-xs font-bold uppercase tracking-wider hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all flex items-center gap-2 shadow-sm whitespace-nowrap"
               disabled={isLoading}
             >
               <Upload size={14} />
